@@ -111,7 +111,6 @@ REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
 REACT_APP_FIREBASE_APP_ID=your-app-id
 ```
 
-> ⚠️ **Important**: Never commit the `.env.local` file to version control. It's already included in `.gitignore`.
 
 ### 5. Firestore Security Rules
 
