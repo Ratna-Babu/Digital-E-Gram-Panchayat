@@ -6,10 +6,15 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 A comprehensive digital platform for Gram Panchayat services management, enabling citizens to apply for various government services online while providing administrative tools for staff and officers to manage applications efficiently.
+![Image](https://github.com/user-attachments/assets/8437ea96-2d59-4332-984f-0a60b7fdcfa8)
+
+![Image](https://github.com/user-attachments/assets/33dc44c4-8d6c-4666-b712-b3afcb1cb76e)
+![Image](https://github.com/user-attachments/assets/1cda82a4-ffa3-47c2-b1d8-b9e53917e626)
 
 ## 🚀 Features
 
 ### For Citizens (Users)
+![Image](https://github.com/user-attachments/assets/508e5fa0-02f3-4ba2-8a9a-eed29eeb582c)
 - **Service Applications**: Apply for various panchayat services online
 - **Application Tracking**: Real-time status updates for submitted applications
 - **Document Management**: Upload and manage required documents
@@ -17,6 +22,7 @@ A comprehensive digital platform for Gram Panchayat services management, enablin
 - **User Dashboard**: Personalized dashboard with quick actions and recent activities
 
 ### For Staff
+![Image](https://github.com/user-attachments/assets/4c97e763-e31c-4300-b8cd-8ec6c84ff8c1)
 - **Application Management**: Review and process citizen applications
 - **Status Updates**: Update application status and add remarks
 - **Document Verification**: Review uploaded documents
@@ -24,6 +30,7 @@ A comprehensive digital platform for Gram Panchayat services management, enablin
 - **Application History**: Track all processed applications
 
 ### For Admin/Officers
+![Image](https://github.com/user-attachments/assets/8b77a1a9-5ca9-4f06-89e4-b6d99c7c150c)
 - **Complete System Management**: Full control over the platform
 - **User Management**: Manage citizens, staff, and officer accounts
 - **Service Management**: Create, update, and manage available services
