@@ -1,0 +1,71 @@
+Project Flow
+
+Officer/Admin
+Login: Via Firebase Auth.
+
+Create Services: Adds documents to services.
+
+Update/Delete Services: Modify or remove services/{serviceId}.
+
+Update Application Status: Access applications, update status, add entry to status_logs.
+
+Logout: Firebase signOut.
+
+User
+Register/Login: Firebase Auth; role user.
+
+Search Services: Fetch data from services.
+
+Apply for Services: Create applications entry with userId, serviceId, status = submitted.
+
+Check My Application Status: Query applications where userId == currentUser.uid.
+
+My Profile: Fetch from users/{userId}.
+
+Logout: Firebase signOut.
+
+Staff
+Login: Firebase Auth; role staff.
+
+View Services: Read services.
+
+Update Application Status: Update applications/{applicationId}, push change to status_logs.
+
+
+
+Features List
+User Features
+Register/Login
+
+Search service schemes
+
+View scheme details
+
+Apply for scheme/service
+
+View application status and logs
+
+Edit profile
+
+Admin/Officer Features
+Login
+
+Create/Edit/Delete schemes/services
+
+View all applications
+
+Update application status (approved, rejected, etc.)
+
+View application logs
+
+View statistics dashboard (optional)
+
+Staff Features
+Login
+
+View services
+
+View assigned applications
+
+Update application status (with optional comments)
+

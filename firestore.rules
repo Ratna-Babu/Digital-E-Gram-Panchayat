@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to get user role from users collection
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    // Helper function to check if user is admin or officer
+    function isAdminOrOfficer() {
+      return isAuthenticated() && getUserRole() in ['admin', 'officer'];
+    }
+    
+    // Helper function to check if user is staff, admin, or officer
+    function isStaffOrAbove() {
+      return isAuthenticated() && getUserRole() in ['staff', 'admin', 'officer'];
+    }
+    
+    // Users collection rules
+    match /users/{userId} {
+      // Allow users to read and write their own user document
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow staff and admin to read all user documents
+      allow read: if request.auth != null && 
+        (request.auth.token.role == 'staff' || request.auth.token.role == 'admin' || request.auth.token.role == 'officer');
+      
+      // Only admins and officers can write to other user documents
+      allow write: if isAuthenticated() && getUserRole() in ['admin', 'officer'] && request.auth.uid != userId;
+      
+      // Allow creation during registration
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Services collection rules
+    match /services/{serviceId} {
+      // Allow all authenticated users to read services
+      allow read: if request.auth != null;
+      
+      // Allow staff and admin to write services
+      allow write: if request.auth != null && 
+        (request.auth.token.role == 'staff' || request.auth.token.role == 'admin' || request.autAh.token.role == 'officer');
+    }
+    
+    // Applications collection rules
+    match /applications/{applicationId} {
+      // Allow users to read and write their own applications
+      allow read, write: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || 
+         request.auth.token.role == 'staff' || 
+         request.auth.token.role == 'admin' || 
+         request.auth.token.role == 'officer');
+      
+      // Allow creation during registration
+      allow create: if isAuthenticated() && request.auth.uid == applicationId;
+    }
+    
+    // Status logs collection rules
+    match /status_logs/{logId} {
+      // Allow all authenticated users to read and write status logs
+      allow read, write: if request.auth != null;
+    }
+    
+    // Allow reading and writing to any collection for admins (fallback)
+    match /{document=**} {
+      allow read, write: if isAuthenticated() && getUserRole() == 'admin';
+    }
+  }
+} 

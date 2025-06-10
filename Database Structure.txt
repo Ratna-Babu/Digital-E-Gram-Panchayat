@@ -1,0 +1,33 @@
+users (collection)
+  └── {userId}
+        - name
+        - email
+        - phone
+        - role [user/staff/officer]
+        - profileInfo
+
+services (collection)
+  └── {serviceId}
+        - title
+        - description
+        - createdBy (admin/officerId)
+        - createdAt
+        - updatedAt
+
+applications (collection)
+  └── {applicationId}
+        - userId
+        - serviceId
+        - status [submitted, in_review, approved, rejected]
+        - submittedAt
+        - updatedAt
+        - notes (optional)
+
+status_logs (collection)
+  └── {logId}
+        - applicationId
+        - changedBy (userId or staffId)
+        - oldStatus
+        - newStatus
+        - timestamp
+        - remarks (optional)
