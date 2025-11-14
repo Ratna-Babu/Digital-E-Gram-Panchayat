@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Digital E-Gram Panchayat — Project Documentation</title>
+</head>
+<body>
+<pre style="font-family: Consolas, 'Courier New', monospace; white-space: pre-wrap;">
+# Digital E-Gram Panchayat — Project Documentation
+
+Version: 1.0
+
+Author: Project contributors (see repository `LICENSE` and `CONTRIBUTING.md`)
+
+Date: 2025-10-26
+
+---
+
+## Table of Contents
+
+1. Introduction
+   1. Project overview
+   2. Purpose and audience
+   3. Goals and scope
+   4. Terminology
+
+2. Analysis
+   1. Problem statement
+   2. Target users and user personas
+   3. Use cases and user stories
+   4. Functional and non-functional requirements
+
+3. Design
+   1. High-level architecture
+   2. Technology stack
+   3. Data model and database structure
+   4. Component breakdown and responsibilities
+   5. UI/UX and navigation
+
+4. Implementation Details
+   1. Project structure (file-by-file overview)
+   2. Key components and code walkthroughs
+   3. Authentication and authorization
+   4. Services and data access
+   5. Styling (Tailwind usage)
+
+5. Installation & Setup
+   1. Requirements
+   2. Local setup step-by-step
+   3. Firebase setup (client and admin)
+   4. Environment configuration
+
+6. User Guides
+   1. Landing page and public workflows
+   2. Register & login flows
+   3. User dashboard and applying for services
+   4. Checking application status
+
+7. Admin & Staff Guides
+   1. Admin dashboard and management features
+   2. Role management
+   3. Service management
+   4. User and application management
+   5. Database setup and migrations
+
+8. Security & Rules
+   1. Firebase security rules overview
+   2. Best practices
+   3. Role-based access control
+
+9. Testing
+   1. Unit tests and component tests
+   2. Integration testing guidance
+   3. Manual test cases and acceptance criteria
+
+10. Deployment
+   1. Production considerations
+   2. Hosting options for React and Firebase
+   3. CI/CD suggestions
+
+11. Maintenance and Troubleshooting
+   1. Logging and monitoring
+   2. Common issues and fixes
+   3. Backups and recovery
+
+12. Future Enhancements
+
+13. Contribution Guide
+
+14. Appendices
+   1. Database schema (detailed)
+   2. Sample JSON payloads
+   3. Important files and snippets
+   4. Changelog
+
+---
+
+## 1. Introduction
+
+### 1.1 Project overview
+
+Digital E-Gram Panchayat is a React-based web application designed to provide an electronic municipal/gram panchayat service portal. It allows users (residents) to submit service applications (requests), check the status of applications, and interact with administrative staff. The repository contains a front-end React application that uses Firebase for authentication, data storage (Firestore), and server-side administration via firebase-admin.
+
+The application follows role-based access: visitors, authenticated users, staff members, and administrators. Features include registration, login, service application submission, application status tracking, administrative review and acceptance, role management, and database setup utilities.
+
+### 1.2 Purpose and audience
+
+This document is intended for:
+
+- Developers who will maintain or extend the application
+- Administrators who will deploy and configure the system
+- Testers responsible for verification of functionality
+- Contributors who want to add features or fix bugs
+
+### 1.3 Goals and scope
+
+Primary goals:
+
+- Provide a clear, maintainable codebase for digital municipal workflows
+- Offer secure authentication and role-based access control
+- Provide easy-to-use admin tools for managing services and applications
+- Allow staff to review, update, and manage user applications
+
+Out of scope (for initial release):
+
+- Offline-first behavior
+- Multilingual UI (beyond basic i18n readiness)
+- Mobile native apps (progressive web app enhancements are possible)
+
+### 1.4 Terminology
+
+- User: a registered resident using the system
+- Staff: internal users who review user applications
+- Admin: top-level user who manages roles, services, and configurations
+- Application: a user-submitted request for a municipal service
+- Service: a type of application users can submit (e.g., birth certificate, household services)
+
+
+## 2. Analysis
+
+### 2.1 Problem statement
+
+Local governments and panchayats often rely on manual paperwork for service requests. This project aims to digitize the process, reduce waiting time, provide clear application statuses, and centralize administrative workflows.
+
+### 2.2 Target users and personas
+
+- Resident/Rural User: Less technical, wants quick submission and status updates.
+- Staff Member: Reviews submissions, marks progress, communicates with users.
+- Admin: Configures services, manages users and roles, oversees the system.
+
+### 2.3 Use cases and user stories
+
+- As a resident, I want to register and log in so I can submit service requests.
+- As a resident, I want to apply for a service and upload supporting documents.
+- As a staff member, I want to list and filter applications assigned to my department.
+- As an admin, I want to create and edit service types.
+- As an admin, I want to give staff certain permissions and revoke them when needed.
+
+### 2.4 Functional requirements
+
+- User registration & login
+- Role-based access control
+- Service creation and management (admin)
+- Application submission with attachments
+- Application status tracking
+- Administrative dashboards for managing users & applications
+
+Non-functional requirements
+
+- Secure authentication and data access
+- Responsive UI compatible with modern browsers
+- Fast and scalable reads/writes (Firestore rules optimized)
+- Extensible code structure with separated concerns
+
+
+## 3. Design
+
+### 3.1 High-level architecture
+
+At a high level, the project is a single-page application (SPA) built with React. It uses Firebase services for authentication and Firestore as the primary database. An admin utility uses the firebase-admin SDK for privileged server-side tasks.
+
+Component boundaries:
+
+- Presentation layer: React components and Tailwind CSS
+- State & context: `AuthContext` for authentication state
+- Service layer: `services/dataService.js` to abstract Firestore reads/writes
+- Admin tools: `config/firebaseAdmin.js` and admin pages under `src/components/admin/`
+
+### 3.2 Technology stack
+
+- React (Create React App or similar)
+- Firebase Authentication (email/password, potential OAuth)
+- Firestore (document database)
+- firebase-admin for server-side admin operations
+- Tailwind CSS for styling
+- JavaScript (ES6+), JSX
+
+### 3.3 Data model and database structure
+
+A simplified data model (collections in Firestore):
+
+- users (document per user)
+  - uid, name, email, roles, profile data
+- services (types of services available)
+  - id, name, description, requiredDocuments, fee, active
+- applications (user submissions)
+  - id, userId, serviceId, data, attachments, status, timestamps, assignedTo
+- roles (optional collection or defined in application)
+
+Detailed schema in Appendix A.
+
+### 3.4 Component breakdown and responsibilities
+
+Key frontend components (folder `src/components`):
+
+- `auth/` contains `Login.js`, `Register.js`
+- `landing/` contains `LandingPage.js`
+- `user/` contains `UserDashboard.js`, `ServiceApplication.js`, `ApplicationStatus.js`
+- `admin/` contains `AdminDashboard.js`, `ServiceManagement.js`, `UserManagement.js`, `RoleManagement.js`, `ApplicationManagement.js`
+- `staff/` contains `StaffDashboard.js`, `ReviewApplications.js`
+- `common/` contains `ProtectedRoute.js`, `Unauthorized.js`
+- `layout/` contains `Layout.js` and `Navbar.js`
+
+Each component has focused responsibilities: UI, calls to `dataService`, and state derived from `AuthContext`.
+
+### 3.5 UI/UX and navigation
+
+- Navbar displays contextual links based on role
+- Protected routes ensure only authorized roles see certain pages
+- Dashboard pages provide filtered lists of applications with search and sort
+- Forms use client-side validation before sending to Firestore
+
+
+## 4. Implementation Details
+
+### 4.1 Project structure (file-by-file overview)
+
+Top-level `src/` files:
+
+- `App.js`: application entrypoint and router
+- `index.js` & `index.css`: app bootstrap and global styles
+- `config/firebase.js`: Firebase client initialization
+- `config/firebaseAdmin.js`: firebase-admin initialization (used by scripts or server-side tools)
+- `context/AuthContext.js` (two copies appear in repo under `context/` and `contexts/` — unify during refactor)
+- `services/dataService.js`: Firestore wrappers for common operations
+- `utils/setupFirestore.js`: scripts for initial DB seeding or setup
+- `utils/databaseSetup.js`: database management helper code
+
+A more thorough file-by-file description follows:
+
+- `src/components/auth/Login.js`: handles sign-in, shows errors, calls firebase auth
+- `src/components/auth/Register.js`: handles new user registration and initial role assignment
+- `src/components/user/ServiceApplication.js`: user can select service type, fill form, attach files, submit
+- `src/components/admin/ServiceManagement.js`: admin can add/edit/delete service types
+- `src/components/admin/UserManagement.js`: admin views users and changes roles
+- `src/components/staff/ReviewApplications.js`: staff view assigned apps and update statuses
+
+Note: The repository includes two `AuthContext` files in different folders; during maintenance remove duplicates and consolidate one context provider under `src/context/`.
+
+### 4.2 Key components and code walkthroughs
+
+AuthContext
+
+- Provides the current user object, roles, and helpers (isAdmin, isStaff, signIn, signOut)
+- Wrap `App` to provide global access to user state
+
+ProtectedRoute
+
+- React Router wrapper that checks `AuthContext` for roles and permissions
+- Redirects to `/login` if not authenticated, or `/unauthorized` if lacks roles
+
+dataService
+
+- Exposes functions: getServices(), getApplicationsForUser(uid), submitApplication(payload), updateApplicationStatus(id, status), getUsers(), setUserRole(uid, role)
+- Wraps Firestore calls and centralizes error handling and retries
+
+Example pseudo-code for submitApplication:
+
+```js
+// services/dataService.js
+export async function submitApplication(application) {
+  const doc = await firestore.collection('applications').add({
+    ...application,
+    status: 'submitted',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+  return doc.id;
+}
+```
+
+### 4.3 Authentication and authorization
+
+- Uses Firebase Authentication for sign-up and sign-in
+- On registration, store additional user profile in `users` collection with roles array
+- Roles: `user`, `staff`, `admin` (possible sub-roles like `finance`, `health` can be added)
+- Enforce role checks in frontend and in Firestore security rules (see Security section)
+
+### 4.4 Services and data access
+
+- All Firestore access goes through `dataService` for consistent behavior
+- Use indexes for common queries (e.g., status, serviceId, assignedTo)
+- Use batched writes for multi-document updates where atomicity is needed
+
+### 4.5 Styling (Tailwind usage)
+
+- `tailwind.config.js` is present at project root
+- Components use utility classes for layout and consistent spacing
+- Consider extracting reused class groups into small reusable components (Button, FormField)
+
+
+## 5. Installation & Setup
+
+This section walks through setting up a local development environment.
+
+### 5.1 Requirements
+
+- Node.js (LTS recommended, e.g., 18.x or later)
+- npm or yarn
+- A Firebase project with Authentication and Firestore enabled
+- Optional: Firebase CLI for emulators and deploy
+
+### 5.2 Local setup step-by-step
+
+1. Clone the repository:
+
+   git clone <repo-url>
+   cd Digital-E-Gram-Panchayat
+
+2. Install dependencies:
+
+   npm install
+
+3. Create a `.env` file at project root (or use environment variable system) with Firebase config variables required by `src/config/firebase.js`. Example:
+
+   REACT_APP_FIREBASE_API_KEY=your_api_key
+   REACT_APP_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   REACT_APP_FIREBASE_PROJECT_ID=your_project_id
+   REACT_APP_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+   REACT_APP_FIREBASE_MESSAGING_SENDER_ID=...
+   REACT_APP_FIREBASE_APP_ID=...
+
+4. Start the development server:
+
+   npm start
+
+The app should be available at http://localhost:3000 by default.
+
+### 5.3 Firebase setup (client and admin)
+
+Client Setup (`src/config/firebase.js`)
+
+- Create a Firebase project in the Firebase Console
+- Enable Email/Password sign-in under Authentication -> Sign-in method
+- Create a Firestore database (start in test mode for local dev, switch to locked in production)
+- Add a web app to the Firebase project and copy the client config into `.env` as described
+
+Admin Setup (`src/config/firebaseAdmin.js`)
+
+- For scripts that need admin privileges (batch user role updates, DB seeding), create a service account JSON in Firebase Console -> Project settings -> Service accounts -> Generate new private key
+- Store the file securely (do not commit to source control). For local usage, set `GOOGLE_APPLICATION_CREDENTIALS` to the path of the JSON key or load the JSON safely in your script.
+
+### 5.4 Environment configuration
+
+- Do not commit `.env` or service account files. Add them to `.gitignore`.
+- For production deployment, use secure environment variables in your hosting provider (Vercel, Netlify, Firebase Hosting, etc.)
+
+
+## 6. User Guides
+
+### 6.1 Landing page and public workflows
+
+- The landing page introduces the available services and directs users to login/register.
+- Public pages show service descriptions and contact info.
+
+### 6.2 Register & login flows
+
+- Registration collects name, email, and password.
+- After registration, user is prompted to complete profile and accept terms.
+- Login returns user to their dashboard and sets JWT/Firebase auth state.
+
+### 6.3 User dashboard and applying for services
+
+- The dashboard lists available services and a submit button.
+- Submitting an application opens a form specific to the chosen service with required fields.
+- Users can upload documents which are stored in Firebase Storage (or Base64 in Firestore if small).
+
+UI tips for users:
+- Use clear, legible file names for attachments
+- Ensure required fields are completed before submission
+
+### 6.4 Checking application status
+
+- Each application has a status lifecycle: submitted -> under_review -> approved/rejected -> completed
+- Users receive status updates in-app; optionally an email notification system can be integrated
+
+
+## 7. Admin & Staff Guides
+
+### 7.1 Admin dashboard and management features
+
+- Admin can manage service types, user roles, and view system analytics.
+- There are pages to create/edit service definitions (required fields, fees, document checklist).
+
+### 7.2 Role management
+
+- Admin assigns roles to users. The app enforces roles in both frontend and Firestore rules.
+- Best practice: maintain a minimal number of admins, use roles like `staff:finance` for scoped permissions.
+
+### 7.3 Service management
+
+- Create a new service type with a clear description and required documents list.
+- Toggle service active/inactive status.
+
+### 7.4 User and application management
+
+- Search and filter users by email, roles, and application history.
+- Applications can be assigned to staff, updated with comments and status changes.
+
+### 7.5 Database setup and migrations
+
+- Use `utils/databaseSetup.js` to seed initial data like default roles and services.
+- For schema changes, write a migration script that reads documents and migrates fields safely and idempotently.
+
+
+## 8. Security & Rules
+
+### 8.1 Firebase security rules overview
+
+- Firestore rules should enforce:
+  - Only logged-in users can create applications tied to their UID
+  - Users can read their own user document and their applications
+  - Staff and admin roles can read lists of applications as allowed
+  - Only admins can modify `services` and `roles`
+
+Example rules outline:
+
+match /databases/{database}/documents {
+  match /users/{userId} {
+    allow read, update: if request.auth != null && request.auth.uid == userId;
+    allow create: if request.auth != null;
+  }
+  match /applications/{appId} {
+    allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    allow read: if request.auth != null && (resource.data.userId == request.auth.uid || hasRole(request.auth.uid, 'staff') || hasRole(request.auth.uid, 'admin'));
+    allow update: if ...; // Define granular checks based on roles
+  }
+}
+
+Note: implement a `hasRole` function using custom claims or a `users` doc lookup logic.
+
+### 8.2 Best practices
+
+- Use Firebase custom claims for role checks in secure server-side contexts.
+- Keep security rules strict; test them using Firebase emulator suite.
+- Validate all input on both client and server rules to avoid injection or malformed data.
+
+### 8.3 Role-based access control
+
+- Avoid encoding trust only in client code. Always enforce role checks in security rules.
+- For elevated actions, execute logic in trusted server code that uses the service account.
+
+
+## 9. Testing
+
+### 9.1 Unit tests and component tests
+
+- Use Jest + React Testing Library for component and unit tests.
+- Test `AuthContext` behavior: signed in/out states, role checks.
+- Test `dataService` functions with mocks to ensure Firestore calls are invoked correctly.
+
+Example test matrix:
+
+- AuthContext: signIn success, signIn failure, signOut
+- ProtectedRoute: redirects for unauthenticated/unauthorized
+- ServiceApplication: validation errors shown when required fields missing
+
+### 9.2 Integration testing guidance
+
+- Use Firebase Emulator Suite to run integration tests against a local Firestore instance and Auth emulator.
+- Seed the emulator with test accounts and test data.
+
+### 9.3 Manual test cases and acceptance criteria
+
+Create a set of manual test cases with steps to perform and expected results. Example:
+
+- TC-001: Register a new user
+  - Steps: Open Register, provide email, password, submit.
+  - Expected: User is created, redirected to dashboard, `users` doc exists in Firestore.
+
+- TC-002: Submit application
+  - Steps: Login, navigate to ServiceApplication, fill required fields, attach file, submit.
+  - Expected: `applications` doc created with `status: submitted`, user sees confirmation.
+
+
+## 10. Deployment
+
+### 10.1 Production considerations
+
+- Lock down Firestore security rules and test them thoroughly
+- Use the Firebase Hosting or alternative static-hosting provider with HTTPS
+- Use environment variables for production Firebase config
+
+### 10.2 Hosting options for React and Firebase
+
+- Firebase Hosting: integrates well with Firestore and functions
+- Netlify or Vercel: host the front-end and use Firebase for backend services
+- For server-side tasks (cron jobs, admin scripts) consider Cloud Functions or a small server hosted on a managed service
+
+### 10.3 CI/CD suggestions
+
+- Build pipeline steps:
+  - Install dependencies
+  - Run linters and tests
+  - Build the production bundle
+  - Deploy to hosting target
+
+- Example providers: GitHub Actions, Azure Pipelines, GitLab CI
+
+
+## 11. Maintenance and Troubleshooting
+
+### 11.1 Logging and monitoring
+
+- Add centralized logging for errors (Sentry or Firebase Crashlytics)
+- Use Firebase console to monitor read/write usage and security rule violations
+
+### 11.2 Common issues and fixes
+
+- Authentication errors: verify Firebase config and enable required sign-in methods
+- Permission denied errors: re-check security rules and user claims
+- File upload issues: ensure Firebase Storage rules and CORS are configured properly
+
+### 11.3 Backups and recovery
+
+- Regularly export Firestore data using scheduled exports to Cloud Storage
+- Keep copies of service account keys in secure vaults
+
+
+## 12. Future Enhancements
+
+- Add email/SMS notifications for status changes using Cloud Functions
+- Implement an audit log for application changes
+- Add a reports/analytics dashboard for admins
+- Improve file attachments handling with resumable uploads
+- Add PWA features for offline usage
+
+
+## 13. Contribution Guide
+
+- Follow the `CONTRIBUTING.md` in the repository
+- Branching strategy: create a feature branch for any non-trivial addition
+- Follow code style conventions (ESLint/Prettier if available)
+- Open PRs describing the change and link any related issue
+
+
+## 14. Appendices
+
+### Appendix A — Database schema (detailed)
+
+This appendix provides a recommended Firestore schema for collections and document fields. Use this as a reference for building queries and security rules.
+
+Collection: users
+- uid (string) [document id]
+- name (string)
+- email (string)
+- roles (array of strings) e.g. ['user'] or ['staff', 'finance']
+- createdAt (timestamp)
+- profile (object) { address, phone }
+
+Collection: services
+- id (string) [document id]
+- name (string)
+- description (string)
+- requiredFields (array of objects) e.g. [{name: 'birthDate', type: 'date', required: true}]
+- requiredDocuments (array of strings)
+- fee (number)
+- active (boolean)
+
+Collection: applications
+- id (string) [document id]
+- userId (string)
+- serviceId (string)
+- data (object) // form answers
+- attachments (array) [storage URLs]
+- status (string) // submitted, under_review, approved, rejected, completed
+- assignedTo (string or null)
+- createdAt (timestamp)
+- updatedAt (timestamp)
+
+### Appendix B — Sample JSON payloads
+
+Sample registration payload (client sends to Firebase Auth indirect via client SDK):
+
+{
+  "email": "user@example.com",
+  "password": "securePassword123",
+  "profile": {
+    "name": "User Name",
+    "address": "Village, District"
+  }
+}
+
+Sample application payload for `dataService.submitApplication`:
+
+{
+  "userId": "uid_123",
+  "serviceId": "service_birth_cert",
+  "data": {
+    "fullName": "User Name",
+    "birthDate": "1990-01-01",
+    "fatherName": "Father Name"
+  },
+  "attachments": [
+    "https://firebasestorage.googleapis.com/.../doc1.jpg"
+  ]
+}
+
+### Appendix C — Important files and snippets
+
+- `src/config/firebase.js` — initialize firebase app and export auth/firestore/storage helpers
+- `src/context/AuthContext.js` — holds user session and role helpers
+- `src/services/dataService.js` — main data access wrapper
+- `firestore.rules` — included in repository; update and test before deployment
+
+Example firebase initialization (client):
+
+```js
+// src/config/firebase.js (example)
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
+import 'firebase/compat/storage';
+
+const firebaseConfig = {
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+};
+
+const app = firebase.initializeApp(firebaseConfig);
+export const auth = app.auth();
+export const firestore = app.firestore();
+export const storage = app.storage();
+export default app;
+```
+
+### Appendix D — Changelog
+
+- v1.0 — Initial documentation draft covering architecture, setup, and user/admin guides (2025-10-26)
+
+
+---
+
+## How to use this documentation
+
+- Paste this Markdown into Word (or convert to `.docx`) and adjust headings and spacing for final formatting.
+- If additional pages are required to reach exactly 50 Word pages, consider: increasing example content in appendices, adding full-screen mockups/screenshots, and adding step-by-step tutorials with screenshots.
+
+
+## Next steps and suggestions
+
+- Run a quick pass to consolidate duplicated files (e.g., two `AuthContext` files) and refactor.
+- Implement or update unit tests and add a CI step to run them.
+- Harden Firestore rules and test with the emulator.
+
+
+---
+
+End of document.
+
+## 15. Expanded Component Reference and Code Examples
+
+This section contains detailed, copy-ready code examples for the most important pieces of the application: the authentication context, protected routes, data service wrappers, and an example migration/seed script for Firestore. These files are intended as a reference implementation you can drop into the project or adapt during refactors.
+
+### 15.1 `AuthContext.js` (detailed implementation)
+
+Contract:
+- Inputs: Firebase `auth` from `src/config/firebase.js`.
+- Outputs: `user` object, `loading` flag, helpers (login, register, logout, refresh token), `hasRole(role)` helper.
+- Error modes: network errors, auth failures.
+
+Edge cases:
+- Auth state changes while UI is interacting (race conditions).
+- Missing `users` document for a Firebase-auth user.
+- Token expiration and refresh issues.
+
+Sample implementation (drop-in):
+
+```js
+// src/context/AuthContext.js
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { auth, firestore } from '../config/firebase';
+
+const AuthContext = createContext();
+
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (fbUser) => {
+      if (!fbUser) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch user profile from Firestore
+      try {
+        const userDoc = await firestore.collection('users').doc(fbUser.uid).get();
+        if (userDoc.exists) {
+          setUser({ uid: fbUser.uid, email: fbUser.email, ...userDoc.data() });
+        } else {
+          // If no user doc, create a minimal profile
+          const profile = { email: fbUser.email, roles: ['user'], createdAt: new Date() };
+          await firestore.collection('users').doc(fbUser.uid).set(profile);
+          setUser({ uid: fbUser.uid, ...profile });
+        }
+      } catch (err) {
+        console.error('AuthContext - failed to fetch user doc', err);
+        setUser({ uid: fbUser.uid, email: fbUser.email, roles: ['user'] });
+      }
+
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const login = (email, password) => auth.signInWithEmailAndPassword(email, password);
+  const register = async (email, password, profile = {}) => {
+    const result = await auth.createUserWithEmailAndPassword(email, password);
+    const uid = result.user.uid;
+    const doc = { email, roles: ['user'], createdAt: new Date(), ...profile };
+    await firestore.collection('users').doc(uid).set(doc);
+    setUser({ uid, ...doc });
+    return result;
+  };
+
+  const logout = () => auth.signOut();
+
+  const hasRole = (role) => !!(user && Array.isArray(user.roles) && user.roles.includes(role));
+
+  const value = { user, loading, login, register, logout, hasRole };
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+```
+
+Notes:
+- This implementation ensures an accompanying `users` document exists for every authenticated user. It is safe but may create minimal `users` docs for third-party auth providers; adapt as needed.
+
+### 15.2 `ProtectedRoute.js` (example)
+
+Objective: ensure only authenticated users with required roles access routes.
+
+```js
+// src/components/common/ProtectedRoute.js
+import React from 'react';
+import { Route, Redirect } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+
+export default function ProtectedRoute({ component: Component, roles = [], ...rest }) {
+  const { user, loading, hasRole } = useAuth();
+
+  return (
+    <Route
+      {...rest}
+      render={(props) => {
+        if (loading) return <div>Loading...</div>;
+        if (!user) return <Redirect to={{ pathname: '/login', state: { from: props.location } }} />;
+        if (roles.length && !roles.some((r) => hasRole(r))) return <Redirect to="/unauthorized" />;
+        return <Component {...props} />;
+      }}
+    />
+  );
+}
+```
+
+... (document continues) ...
+</pre>
+</body>
+</html>
